@@ -99,7 +99,7 @@ const User = () => {
     setPasswordError("");
   
     try {
-      await axiosInstance.post('/api/users/update', {
+      await axiosInstance.post('/user/update', {
         employeeCode,
         fullname,
         mobile,

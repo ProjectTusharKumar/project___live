@@ -48,7 +48,7 @@ const RegistrationForm = () => {
     }
 
     try {
-      const response = await axiosInstance.post('/registration', formData, {
+      const response = await axiosInstance.post('/employee/create', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

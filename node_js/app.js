@@ -43,7 +43,7 @@ const storage = multer.memoryStorage(); // Use memory storage to avoid saving to
 const upload = multer({ storage });
 
 // Endpoint to handle file upload and save user data
-app.post('/registration', upload.single('image'), async (req, res) => {
+app.post('/employee/create', upload.single('image'), async (req, res) => {
   const { employeeCode, fullname, mobile, email, dob, Uuid, imagePath } = req.body;
 
   try {
@@ -135,7 +135,7 @@ app.get('/api/employee/:employeeCode', async (req, res) => {
 });
 
 // Endpoint to update user details
-app.post('/api/users/update', authenticateToken, upload.single('image'), async (req, res) => {
+app.post('/user/update', authenticateToken, upload.single('image'), async (req, res) => {
   const { employeeCode, fullname, mobile, email, dob, password, status } = req.body;
 
   if (!employeeCode) {
