@@ -7,15 +7,15 @@ import Registration from './component/Registration/Registration';
 import User from './component/User/User'
 function App() {
   return (
-  <>    
-  <Router>
-    <Routes>
-      <Route path="/Login" element={<Login />} />
-       <Route path="/" element={<Registration />} />
-       <Route path="/User" element={<User />} />
-       </Routes>
-</Router>
-  </>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/Login" element={<Login />} />
+          <Route path="/" element={<Registration />} />
+          <Route path="/User" element={<User />} />
+        </Routes>
+      </Router>
+    </>
   );
 }
 export default App;

@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { LOGIN_AUTH_TOKEN_KEY } from './EnumValues';
 // Create an instance of Axios
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000', // Replace with your API base URL
+  baseURL: process.env.REACT_APP_BASE_URL,
 });
 
 // Request interceptor
@@ -9,7 +10,7 @@ axiosInstance.interceptors.request.use(
   config => {
     // Add any headers or other configurations here
     // For example, adding an Authorization token
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(LOGIN_AUTH_TOKEN_KEY);
     if (token) {
       config.headers['x-access-token'] = `Bearer ${token}`; //Bearer 
     }

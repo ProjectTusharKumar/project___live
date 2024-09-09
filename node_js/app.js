@@ -13,10 +13,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/project_live', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+mongoose.connect('mongodb://localhost:27017/project_live');
 
 const employeeSchema = new mongoose.Schema({
   password: { type: String },
@@ -43,7 +40,7 @@ const storage = multer.memoryStorage(); // Use memory storage to avoid saving to
 const upload = multer({ storage });
 
 // Endpoint to handle file upload and save user data
-app.post('/employee/create', upload.single('image'), async (req, res) => {
+app.post('/registration', upload.single('image'), async (req, res) => {
   const { employeeCode, fullname, mobile, email, dob, Uuid, imagePath } = req.body;
 
   try {
@@ -135,8 +132,9 @@ app.get('/api/employee/:employeeCode', async (req, res) => {
 });
 
 // Endpoint to update user details
-app.post('/user/update', authenticateToken, upload.single('image'), async (req, res) => {
-  const { employeeCode, fullname, mobile, email, dob, password, status } = req.body;
+app.post('/api/users/update', authenticateToken, async (req, res) => {
+  debugger
+  const { employeeCode, password, status } = req.body;
 
   if (!employeeCode) {
     return res.status(400).json({ message: 'Employee Code is required' });
@@ -144,14 +142,7 @@ app.post('/user/update', authenticateToken, upload.single('image'), async (req, 
 
   try {
     // Construct the image path if an image was uploaded
-    const imagePath = req.file ? `profile/${req.file.filename}` : undefined;
-
     const updateFields = {
-      fullname,
-      mobile,
-      email,
-      dob,
-      ...(imagePath && { imagePath }), // Update imagePath if a new image is uploaded
       'employee.active': status,
       'employee.password': password
     };

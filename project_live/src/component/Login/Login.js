@@ -3,48 +3,52 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import '../Login/Login.css'; // Relative path to the CSS file
 import { FaUserCircle } from 'react-icons/fa'; // Font Awesome icon
 import 'bootstrap-icons/font/bootstrap-icons.css'; // Bootstrap Icons CSS
-import axiosInstance from '../common/axiosInstance'; // Import Axios
 import Popup from '../Popup/Popup'; // Ensure Popup component is correctly imported
+import { LOGIN_AUTH_TOKEN_KEY } from '../common/EnumValues';
+import { getLoginDetails } from '../../services/login.data';
+import {  messages } from '../common/ErrorMessages';
+import { ROUTE_URLS } from '../common/RedirectURL';
 
 function Login() {
     const [popup, setPopup] = useState({ show: false, title: '', message: '' });
-    const [employeeCode, setEmployeeCode] = useState('');
-    const [password, setPassword] = useState('');
+    const [ loginObj, setLoginObj] = useState({
+        employeeCode:'',
+        password:''
+    })
+    
     const navigate = useNavigate(); // Initialize navigate
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axiosInstance.post('/login', {
-                employeeCode,
-                password,
-            });
-
-            // Save the token in local storage
-            localStorage.setItem('token', response.data.token);
-
-            // Handle success response
-            // console.log('Response:', response.data);
-            setPopup({ show: true, title: 'Success', message: 'Login success' });
-            
-            // Navigate to the user page after a short delay (optional)
+            const response = await getLoginDetails(loginObj.employeeCode, loginObj.password);
+            localStorage.setItem(LOGIN_AUTH_TOKEN_KEY, response.data.token);
+            setPopup({ show: true, title: messages.login.SUCCESS_MSG_TITLE, message: messages.login.SUCCESS_MSG });
             setTimeout(() => {
-                navigate('/user'); // Redirect to the user page
-            }, 2000); // Adjust delay as needed (in milliseconds)
+                navigate(ROUTE_URLS.USER);
+            }, 2000);
         } catch (error) {
-            // Handle error response
-            console.error('Error:', error);
-            setPopup({ show: true, title: 'Error', message: 'Login failed' });
+            setPopup({ show: true, title: messages.login.ERROR_MSG_TITLE, message: messages.login.ERROR_MSG });
         }
     };
+
+    const handleOnChange = (key, value) => {
+        setLoginObj((prev) => {
+            let prevObj = {...prev};
+            prevObj[key] = value;
+            return prevObj;
+        })
+    }
+
     return (
         <div className="login-container d-flex justify-content-center align-items-center">
             <div className="login-form">
                 <div className="text-center mb-4">
                     <FaUserCircle className="login-icon" />
                 </div>
-                <form onSubmit={handleLogin}>
-                    <div className="form-group mb-3">
+                 
+
+                <div className="form-group mb-3">
                         <div className="input-group">
                             <div className="input-group-prepend">
                                 <span className="input-group-text">
@@ -56,8 +60,8 @@ function Login() {
                                 className="form-control" 
                                 id="username" 
                                 placeholder="Enter Employee Code" 
-                                value={employeeCode}
-                                onChange={(e) => setEmployeeCode(e.target.value)}
+                                value={loginObj.employeeCode || ''}
+                                onChange={(e) => handleOnChange('employeeCode', e.target.value)}
                             />
                         </div>
                     </div>
@@ -73,13 +77,12 @@ function Login() {
                                 className="form-control" 
                                 id="password" 
                                 placeholder="Password" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={loginObj.password}
+                                onChange={(e) => handleOnChange('password', e.target.value)}
                             />
                         </div>
                     </div>
-                    <button type="submit" className="btn btn-primary w-100">Login</button>
-                </form>
+                    <button type="submit" className="btn btn-primary w-100" onClick={handleLogin}>Login</button>
             </div>
             <Popup 
         show={popup.show}

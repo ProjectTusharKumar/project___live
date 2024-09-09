@@ -1,77 +1,95 @@
 import React, { useState } from "react";
 import { Form, Button, Container, Row, Col, InputGroup, Image, Alert } from "react-bootstrap";
 import { Save, Person, Trash } from "react-bootstrap-icons";
-import axiosInstance from '../common/axiosInstance';
 import Popup from '../Popup/Popup';
 import { v4 as uuidv4 } from 'uuid';
+import { saveRegistration } from "../../services/registration.data";
 
 const RegistrationForm = () => {
-  const [employeeCode, setEmployeeCode] = useState("");
-  const [fullname, setFullname] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [email, setEmail] = useState("");
-  const [dob, setDob] = useState("");
-  const [image, setImage] = useState(null);
-  const [imagePath, setImagePath] = useState("");  // Store image path here
-  const [dobError, setDobError] = useState("");
+  const [regObj, setRegObj] = useState({
+    employeeCode:'',
+    fullname:'',
+    mobile:'',
+    email:'',
+    dob:'',
+    image:'',
+    imagePath:'',
+    dobError: ''
+  })
+   
   const [popup, setPopup] = useState({ show: false, title: '', message: '' });
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file); // Set the image file for later submission
-      setImagePath(URL.createObjectURL(file)); // Save the image path
+      setRegObj((prev)=>{
+        let prevObj ={...prev};
+        prevObj.image = file;
+        prevObj.imagePath = URL.createObjectURL(file);
+        return prevObj;
+      });
     }
   };
 
   const handleImageDelete = () => {
-    setImage(null); // Clear the image when removed
-    setImagePath(""); // Clear the image path
+    setRegObj((prev)=>{
+      let prevObj ={...prev};
+      prevObj.image = null;
+      prevObj.imagePath = "";
+      return prevObj;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newUuid = uuidv4();
 
-    if (dobError) return; // Prevent submission if there are errors
+    if (regObj.dobError) return; // Prevent submission if there are errors
 
     const formData = new FormData();
-    formData.append("employeeCode", employeeCode);
+    let __keys = Object.keys(regObj);
+    let __keyName = ''
+    for(let i = 0; i < __keys.length; i++) {
+      __keyName = __keys[i];
+      formData.append(__keyName, regObj[__keyName]);
+    }
     formData.append("Uuid", newUuid);
-    formData.append("fullname", fullname);
-    formData.append("mobile", mobile);
-    formData.append("email", email);
-    formData.append("dob", dob);
-    formData.append("imagePath", imagePath);  // Add image path to form data
-    if (image) {
-      formData.append("image", image); // Append the image if present
+
+    if (regObj.image) {
+      formData.append("image", regObj.image); // Append the image if present
     }
 
-    try {
-      const response = await axiosInstance.post('/employee/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      
+    saveRegistration(formData).then((reponse) =>{
       setPopup({ show: true, title: 'Success', message: 'Data saved successfully!' });
-      console.log(imagePath)
-    } catch (error) {
+    }).catch((error) => {
       console.error('Error:', error);
       setPopup({ show: true, title: 'Error', message: 'User already exists or another issue occurred.' });
-    }
-  };
+    });
+  }
 
   const handleDobChange = (e) => {
     const inputDate = new Date(e.target.value);
     const today = new Date();
     const age = today.getFullYear() - inputDate.getFullYear();
+    let __dobError = ""
     if (age < 18 || (age === 18 && today < new Date(today.getFullYear(), inputDate.getMonth(), inputDate.getDate()))) {
-      setDobError("You must be 18 years or older.");
-    } else {
-      setDobError("");
-    }
-    setDob(e.target.value);
+      __dobError = "You must be 18 years or older.";
+    } 
+    setRegObj((prev)=>{
+      let prevObj ={...prev};
+      prevObj.dob = e.target.value;
+      prevObj.dobError = __dobError
+      return prevObj;
+    });
   };
+
+  const handleOnChange = (key, value) => {
+    setRegObj((prev)=>{
+      let prevObj ={...prev};
+      prevObj[key] = value;
+      return prevObj;
+    });
+  }
 
   const handleClosePopup = () => {
     setPopup({ show: false, title: '', message: '' });
@@ -91,7 +109,7 @@ const RegistrationForm = () => {
           <h4>Employee Registration</h4>
         </Col>
         <Col className="text-end">
-          <Button variant="primary" onClick={handleSubmit} disabled={dobError !== ""}>
+          <Button variant="primary" onClick={handleSubmit} disabled={regObj.dobError !== ""}>
             <Save className="me-2" />
             Save
           </Button>
@@ -108,8 +126,8 @@ const RegistrationForm = () => {
                   <Form.Control
                     type="text"
                     placeholder="Enter Employee Code"
-                    value={employeeCode}
-                    onChange={(e) => setEmployeeCode(e.target.value)}
+                    value={regObj.employeeCode}
+                    onChange={(e) => handleOnChange('employeeCode', e.target.value)}
                     required
                   />
                 </Form.Group>
@@ -120,8 +138,8 @@ const RegistrationForm = () => {
                   <Form.Control
                     type="text"
                     placeholder="Enter Fullname"
-                    value={fullname}
-                    onChange={(e) => setFullname(e.target.value)}
+                    value={regObj.fullname}
+                    onChange={(e) => handleOnChange('fullname', e.target.value)}
                     required
                   />
                 </Form.Group>
@@ -135,8 +153,8 @@ const RegistrationForm = () => {
                   <Form.Control
                     type="text"
                     placeholder="Enter Mobile Number"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
+                    value={regObj.mobile}
+                    onChange={(e) => handleOnChange('mobile', e.target.value)}
                     pattern="^\d{10}$"
                     title="Please enter a valid 10-digit mobile number"
                     required
@@ -149,8 +167,8 @@ const RegistrationForm = () => {
                   <Form.Control
                     type="email"
                     placeholder="Enter Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={regObj.email}
+                    onChange={(e) => handleOnChange('email', e.target.value)}
                     pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                     title="Please enter a valid email address"
                     required
@@ -165,13 +183,13 @@ const RegistrationForm = () => {
                   <Form.Label>Date of Birth</Form.Label>
                   <Form.Control
                     type="date"
-                    value={dob}
+                    value={regObj.dob}
                     onChange={handleDobChange}
                     required
                   />
-                  {dobError && (
+                  {regObj.dobError && (
                     <Alert variant="danger" className="mt-2">
-                      {dobError}
+                      {regObj.dobError}
                     </Alert>
                   )}
                 </Form.Group>
@@ -181,10 +199,10 @@ const RegistrationForm = () => {
         </Col>
 
         <Col md={4} className="d-flex flex-column align-items-center">
-          {image ? (
+          {regObj.image ? (
             <>
               <Image 
-                src={imagePath}  // Use image path to display image
+                src={regObj.imagePath}  // Use image path to display image
                 roundedCircle 
                 fluid 
                 style={{ width: '150px', height: '150px', marginBottom: '20px' }} 
@@ -212,7 +230,7 @@ const RegistrationForm = () => {
 
       <Row className="mt-3">
         <Col>
-          <Button variant="primary" onClick={handleSubmit} disabled={dobError !== ""}>
+          <Button variant="primary" onClick={handleSubmit} disabled={regObj.dobError !== ""}>
             <Save className="me-2" />
             Save
           </Button>
